@@ -14,7 +14,6 @@
   <title>Mía XV | Cámara</title>
 
   <style>
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -46,7 +45,6 @@
       width: 100%;
       height: 100dvh;
     }
-
 
     /* =====================================================
        PORTADA
@@ -85,7 +83,6 @@
     }
 
     @keyframes brillar {
-
       from {
         opacity: .15;
         transform: scale(.8);
@@ -95,7 +92,6 @@
         opacity: .95;
         transform: scale(1.15);
       }
-
     }
 
     .contenido-inicio {
@@ -163,7 +159,6 @@
       color: rgba(255,255,255,.43);
     }
 
-
     /* =====================================================
        CÁMARA
     ===================================================== */
@@ -175,10 +170,8 @@
     #video {
       position: absolute;
       inset: 0;
-
       width: 100%;
       height: 100%;
-
       object-fit: cover;
       background: black;
     }
@@ -193,7 +186,7 @@
 
       padding:
         calc(env(safe-area-inset-top) + 18px)
-        20px
+        16px
         45px;
 
       display: flex;
@@ -216,12 +209,11 @@
     .indicadores {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
     }
 
     .pill {
-      padding: 8px 12px;
-
+      padding: 8px 11px;
       border:
         1px solid
         rgba(255,255,255,.35);
@@ -241,9 +233,26 @@
       color: #f3d985;
     }
 
+    #botonFlash {
+      color: #fff;
+      cursor: pointer;
+    }
+
+    #botonFlash.activo {
+      background:
+        linear-gradient(
+          135deg,
+          #f4df9b,
+          #c99a3f
+        );
+
+      color: #111;
+      border-color: transparent;
+      font-weight: 700;
+    }
 
     /* =====================================================
-       CONTROLES CÁMARA
+       CONTROLES
     ===================================================== */
 
     .controles {
@@ -290,11 +299,8 @@
     #disparadorInterior {
       width: 100%;
       height: 100%;
-
       border-radius: 50%;
-
       background: white;
-
       transition: transform .08s ease;
     }
 
@@ -319,14 +325,12 @@
         rgba(0,0,0,.4);
 
       color: white;
-
       font-size: 24px;
 
       cursor: pointer;
 
       backdrop-filter: blur(10px);
     }
-
 
     /* =====================================================
        PREVISUALIZACIÓN
@@ -345,7 +349,6 @@
       height: 100%;
 
       object-fit: contain;
-
       background: black;
     }
 
@@ -408,15 +411,11 @@
 
     .btn-preview {
       flex: 1;
-
       min-height: 58px;
-
       border-radius: 999px;
-
       font-size: 13px;
       font-weight: bold;
       letter-spacing: 1px;
-
       cursor: pointer;
     }
 
@@ -445,11 +444,6 @@
 
       color: #111;
     }
-
-    #guardar:disabled {
-      opacity: .55;
-    }
-
 
     /* =====================================================
        MENSAJES
@@ -500,12 +494,11 @@
         translateY(0);
     }
 
-
     /* =====================================================
-       FLASH
+       FLASH DE PANTALLA
     ===================================================== */
 
-    #flash {
+    #flashPantalla {
       position: fixed;
       z-index: 9999;
 
@@ -518,12 +511,12 @@
       pointer-events: none;
     }
 
-    #flash.activo {
-      animation: efectoFlash .3s ease;
+    #flashPantalla.activo {
+      animation:
+        efectoFlash .3s ease;
     }
 
     @keyframes efectoFlash {
-
       0% {
         opacity: 0;
       }
@@ -535,9 +528,7 @@
       100% {
         opacity: 0;
       }
-
     }
-
 
     /* =====================================================
        ERROR
@@ -568,7 +559,10 @@
     .error-contenido h2 {
       margin-bottom: 15px;
 
-      font-family: Georgia, "Times New Roman", serif;
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
 
       font-weight: normal;
       font-size: 30px;
@@ -590,13 +584,9 @@
   </style>
 </head>
 
-
 <body>
 
-
-  <!-- ===================================================
-       INICIO
-  ==================================================== -->
+  <!-- INICIO -->
 
   <section
     id="inicio"
@@ -632,10 +622,8 @@
       </button>
 
       <p class="nota">
-        Podrás revisar únicamente la foto
-        que acabás de tomar.
-        <br>
-        Una vez guardada, desaparecerá.
+        Si tu celular permite flash,
+        podrás activarlo desde la cámara.
       </p>
 
     </div>
@@ -643,9 +631,7 @@
   </section>
 
 
-  <!-- ===================================================
-       CÁMARA
-  ==================================================== -->
+  <!-- CÁMARA -->
 
   <section
     id="pantallaCamara"
@@ -667,6 +653,13 @@
       </div>
 
       <div class="indicadores">
+
+        <button
+          id="botonFlash"
+          class="pill hidden"
+        >
+          ⚡ OFF
+        </button>
 
         <div
           id="pendientes"
@@ -700,9 +693,7 @@
         id="disparador"
         aria-label="Tomar foto"
       >
-        <div
-          id="disparadorInterior"
-        ></div>
+        <div id="disparadorInterior"></div>
       </button>
 
 
@@ -718,9 +709,7 @@
   </section>
 
 
-  <!-- ===================================================
-       PREVISUALIZACIÓN
-  ==================================================== -->
+  <!-- PREVISUALIZACIÓN -->
 
   <section
     id="previsualizacion"
@@ -740,8 +729,8 @@
       </h2>
 
       <p>
-        Esta es tu única oportunidad
-        de revisar esta foto.
+        Podés guardar esta foto
+        o volver a intentarlo.
       </p>
 
     </div>
@@ -768,9 +757,7 @@
   </section>
 
 
-  <!-- ===================================================
-       ERROR
-  ==================================================== -->
+  <!-- ERROR -->
 
   <section
     id="errorCamara"
@@ -802,14 +789,10 @@
 
   <canvas id="canvas"></canvas>
 
-  <div id="flash"></div>
+  <div id="flashPantalla"></div>
 
 
 <script>
-
-  /* =====================================================
-     CONFIGURACIÓN
-  ===================================================== */
 
   const URL_APPS_SCRIPT =
     "https://script.google.com/macros/s/AKfycbz7S3A9fVYf2Es1PEV0yO6bQyQq824oNcQi5bLmPsLPoYeX4np8J8u2H0IRgbW9sKm7/exec";
@@ -824,139 +807,111 @@
 
 
   const STORAGE_KEY =
-    "miaXV_fotosPendientes_v3";
+    "miaXV_fotosPendientes_v4";
 
 
   const STORAGE_SESION =
-    "miaXV_sesion_v3";
+    "miaXV_sesion_v4";
 
 
   const STORAGE_CONTADOR =
-    "miaXV_guardadas_v3";
+    "miaXV_guardadas_v4";
 
-
-  /* =====================================================
-     ELEMENTOS
-  ===================================================== */
 
   const inicio =
-    document.getElementById(
-      "inicio"
-    );
+    document.getElementById("inicio");
 
 
   const pantallaCamara =
-    document.getElementById(
-      "pantallaCamara"
-    );
+    document.getElementById("pantallaCamara");
 
 
   const previsualizacion =
-    document.getElementById(
-      "previsualizacion"
-    );
+    document.getElementById("previsualizacion");
 
 
   const video =
-    document.getElementById(
-      "video"
-    );
+    document.getElementById("video");
 
 
   const canvas =
-    document.getElementById(
-      "canvas"
-    );
+    document.getElementById("canvas");
 
 
   const fotoPreview =
-    document.getElementById(
-      "fotoPreview"
-    );
+    document.getElementById("fotoPreview");
 
 
   const abrirCamara =
-    document.getElementById(
-      "abrirCamara"
-    );
+    document.getElementById("abrirCamara");
 
 
   const disparador =
-    document.getElementById(
-      "disparador"
-    );
+    document.getElementById("disparador");
 
 
   const cambiarCamara =
-    document.getElementById(
-      "cambiarCamara"
-    );
+    document.getElementById("cambiarCamara");
+
+
+  const botonFlash =
+    document.getElementById("botonFlash");
 
 
   const descartar =
-    document.getElementById(
-      "descartar"
-    );
+    document.getElementById("descartar");
 
 
   const guardar =
-    document.getElementById(
-      "guardar"
-    );
+    document.getElementById("guardar");
 
 
   const contador =
-    document.getElementById(
-      "contador"
-    );
+    document.getElementById("contador");
 
 
   const pendientesElemento =
-    document.getElementById(
-      "pendientes"
-    );
+    document.getElementById("pendientes");
 
 
   const estado =
-    document.getElementById(
-      "estado"
-    );
+    document.getElementById("estado");
 
 
-  const flash =
-    document.getElementById(
-      "flash"
-    );
+  const flashPantalla =
+    document.getElementById("flashPantalla");
 
 
   const errorCamara =
-    document.getElementById(
-      "errorCamara"
-    );
+    document.getElementById("errorCamara");
 
 
   const mensajeError =
-    document.getElementById(
-      "mensajeError"
-    );
+    document.getElementById("mensajeError");
 
 
   const reintentar =
-    document.getElementById(
-      "reintentar"
-    );
+    document.getElementById("reintentar");
 
-
-  /* =====================================================
-     VARIABLES
-  ===================================================== */
 
   let stream =
     null;
 
 
+  let videoTrack =
+    null;
+
+
   let facingMode =
     "environment";
+
+
+  let flashDisponible =
+    false;
+
+
+  let flashActivo =
+    false;
 
 
   let fotoActual =
@@ -982,10 +937,6 @@
   let cola =
     cargarCola();
 
-
-  /* =====================================================
-     SESIÓN
-  ===================================================== */
 
   let sesion =
     localStorage.getItem(
@@ -1078,10 +1029,6 @@
   crearEstrellas();
 
 
-  /* =====================================================
-     INICIALIZACIÓN
-  ===================================================== */
-
   actualizarContadores();
 
 
@@ -1159,16 +1106,7 @@
 
     try {
 
-      if (
-        !navigator.mediaDevices ||
-        !navigator.mediaDevices.getUserMedia
-      ) {
-
-        throw new Error(
-          "Este navegador no permite usar la cámara desde esta página."
-        );
-
-      }
+      apagarFlashInterno();
 
 
       detenerCamara();
@@ -1204,7 +1142,15 @@
         stream;
 
 
+      videoTrack =
+        stream
+          .getVideoTracks()[0];
+
+
       await video.play();
+
+
+      detectarFlash();
 
 
     } catch (error) {
@@ -1266,6 +1212,184 @@
     stream =
       null;
 
+
+    videoTrack =
+      null;
+
+  }
+
+
+  /* =====================================================
+     FLASH REAL
+  ===================================================== */
+
+  function detectarFlash() {
+
+    flashDisponible =
+      false;
+
+
+    flashActivo =
+      false;
+
+
+    botonFlash.classList.remove(
+      "activo"
+    );
+
+
+    botonFlash.textContent =
+      "⚡ OFF";
+
+
+    botonFlash.classList.add(
+      "hidden"
+    );
+
+
+    if (!videoTrack) {
+      return;
+    }
+
+
+    try {
+
+      const capacidades =
+        videoTrack.getCapabilities
+          ? videoTrack.getCapabilities()
+          : {};
+
+
+      if (
+        capacidades &&
+        capacidades.torch
+      ) {
+
+        flashDisponible =
+          true;
+
+
+        botonFlash.classList.remove(
+          "hidden"
+        );
+
+      }
+
+    } catch (error) {
+
+      console.log(
+        "Flash no disponible:",
+        error
+      );
+
+    }
+
+  }
+
+
+  botonFlash.addEventListener(
+    "click",
+    async function () {
+
+      if (
+        !flashDisponible ||
+        !videoTrack
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        flashActivo =
+          !flashActivo;
+
+
+        await videoTrack
+          .applyConstraints({
+
+            advanced: [
+              {
+                torch:
+                  flashActivo
+              }
+            ]
+
+          });
+
+
+        botonFlash.textContent =
+          flashActivo
+            ? "⚡ ON"
+            : "⚡ OFF";
+
+
+        botonFlash.classList.toggle(
+          "activo",
+          flashActivo
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "No se pudo cambiar el flash:",
+          error
+        );
+
+
+        flashActivo =
+          false;
+
+
+        botonFlash.textContent =
+          "⚡ OFF";
+
+
+        botonFlash.classList.remove(
+          "activo"
+        );
+
+
+        mostrarEstado(
+          "Flash no disponible"
+        );
+
+      }
+
+    }
+  );
+
+
+  function apagarFlashInterno() {
+
+    flashActivo =
+      false;
+
+
+    if (
+      videoTrack &&
+      videoTrack.applyConstraints
+    ) {
+
+      videoTrack
+        .applyConstraints({
+
+          advanced: [
+            {
+              torch: false
+            }
+          ]
+
+        })
+        .catch(
+          function () {}
+        );
+
+    }
+
   }
 
 
@@ -1276,6 +1400,9 @@
   cambiarCamara.addEventListener(
     "click",
     async function () {
+
+      apagarFlashInterno();
+
 
       facingMode =
         facingMode ===
@@ -1316,7 +1443,7 @@
     }
 
 
-    ejecutarFlash();
+    ejecutarFlashPantalla();
 
 
     try {
@@ -1354,10 +1481,6 @@
 
   }
 
-
-  /* =====================================================
-     CAPTURAR IMAGEN
-  ===================================================== */
 
   function capturarImagen() {
 
@@ -1502,10 +1625,6 @@
       }
 
 
-      guardar.disabled =
-        true;
-
-
       fotosGuardadas++;
 
 
@@ -1570,14 +1689,10 @@
       );
 
 
-      guardar.disabled =
-        false;
-
-
       mostrarEstado(
         navigator.onLine
           ? "✓ Guardada para Mía"
-          : "✓ Guardada. Se enviará luego"
+          : "✓ Se enviará luego"
       );
 
 
@@ -1588,7 +1703,7 @@
 
 
   /* =====================================================
-     COLA LOCAL
+     COLA
   ===================================================== */
 
   function cargarCola() {
@@ -1642,23 +1757,14 @@
 
     } catch (error) {
 
-      console.error(
-        error
-      );
-
-
       mostrarEstado(
-        "⚠ No hay espacio para más fotos"
+        "⚠ Memoria llena"
       );
 
     }
 
   }
 
-
-  /* =====================================================
-     PROCESAR COLA
-  ===================================================== */
 
   async function procesarCola() {
 
@@ -1719,16 +1825,6 @@
 
         try {
 
-          item.intentos =
-            (
-              item.intentos ||
-              0
-            ) + 1;
-
-
-          guardarCola();
-
-
           await enviarFoto(
             item
           );
@@ -1779,7 +1875,6 @@
 
             actualizarContadores();
 
-
             continue;
 
           }
@@ -1789,11 +1884,6 @@
 
 
         } catch (error) {
-
-          console.error(
-            error
-          );
-
 
           indice++;
 
@@ -1816,10 +1906,6 @@
 
   }
 
-
-  /* =====================================================
-     ENVIAR FOTO
-  ===================================================== */
 
   async function enviarFoto(
     item
@@ -1866,10 +1952,8 @@
           "no-cors",
 
         headers: {
-
           "Content-Type":
             "application/x-www-form-urlencoded"
-
         },
 
         body:
@@ -1880,10 +1964,6 @@
 
   }
 
-
-  /* =====================================================
-     CONFIRMACIÓN
-  ===================================================== */
 
   function consultarConfirmacion(
     uploadId
@@ -2074,17 +2154,17 @@
   }
 
 
-  function ejecutarFlash() {
+  function ejecutarFlashPantalla() {
 
-    flash.classList.remove(
+    flashPantalla.classList.remove(
       "activo"
     );
 
 
-    void flash.offsetWidth;
+    void flashPantalla.offsetWidth;
 
 
-    flash.classList.add(
+    flashPantalla.classList.add(
       "activo"
     );
 
@@ -2125,7 +2205,7 @@
 
 
   function esperar(
-    milisegundos
+    ms
   ) {
 
     return new Promise(
@@ -2133,7 +2213,7 @@
 
         setTimeout(
           resolve,
-          milisegundos
+          ms
         );
 
       }
@@ -2144,7 +2224,13 @@
 
   window.addEventListener(
     "beforeunload",
-    detenerCamara
+    function () {
+
+      apagarFlashInterno();
+
+      detenerCamara();
+
+    }
   );
 
 </script>
