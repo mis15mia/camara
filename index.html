@@ -207,23 +207,28 @@
       letter-spacing: 3px;
     }
 
-    #contador {
-      padding: 8px 13px;
+    .estado-superior {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
+    .pill {
+      padding: 8px 13px;
       border:
         1px solid
         rgba(255,255,255,.35);
-
       border-radius: 999px;
-
       background:
         rgba(0,0,0,.25);
-
       backdrop-filter:
         blur(10px);
-
       font-size: 11px;
       letter-spacing: 1px;
+    }
+
+    #pendientes {
+      color: #f2d680;
     }
 
     .controles {
@@ -280,8 +285,7 @@
         transform .08s ease;
     }
 
-    #disparador:active
-    #disparadorInterior {
+    #disparador:active #disparadorInterior {
       transform: scale(.84);
     }
 
@@ -311,7 +315,7 @@
     }
 
     /* ==========================================
-       ESTADO
+       MENSAJES
     ========================================== */
 
     #estado {
@@ -492,7 +496,7 @@
       <p class="nota">
         Las fotos serán una sorpresa para Mía.
         <br>
-        No necesitás instalar ninguna aplicación.
+        Si la señal falla, intentaremos enviarlas nuevamente.
       </p>
 
     </div>
@@ -521,8 +525,22 @@
         MÍA XV
       </div>
 
-      <div id="contador">
-        00 FOTOS
+      <div class="estado-superior">
+
+        <div
+          id="pendientes"
+          class="pill"
+        >
+          0 PEND.
+        </div>
+
+        <div
+          id="contador"
+          class="pill"
+        >
+          00 FOTOS
+        </div>
+
       </div>
 
     </div>
@@ -604,10 +622,18 @@
   const URL_APPS_SCRIPT =
     "https://script.google.com/macros/s/AKfycbz7S3A9fVYf2Es1PEV0yO6bQyQq824oNcQi5bLmPsLPoYeX4np8J8u2H0IRgbW9sKm7/exec";
 
-
   const MAX_WIDTH = 1440;
 
   const CALIDAD_JPEG = 0.78;
+
+  const STORAGE_KEY =
+    "miaXV_fotosPendientes_v2";
+
+  const STORAGE_SESION =
+    "miaXV_sesion";
+
+  const STORAGE_CONTADOR =
+    "miaXV_contador";
 
 
   /* ========================================================
@@ -654,6 +680,11 @@
       "contador"
     );
 
+  const pendientesElemento =
+    document.getElementById(
+      "pendientes"
+    );
+
   const estado =
     document.getElementById(
       "estado"
@@ -689,20 +720,28 @@
   let facingMode =
     "environment";
 
-  let fotosTomadas = 0;
-
-  let procesando = false;
-
   let temporizadorEstado = null;
+
+  let procesandoCola = false;
+
+  let fotosTomadas =
+    Number(
+      localStorage.getItem(
+        STORAGE_CONTADOR
+      ) || 0
+    );
+
+  let cola =
+    cargarCola();
 
 
   /* ========================================================
-     SESIÓN ANÓNIMA DEL DISPOSITIVO
+     SESIÓN
   ======================================================== */
 
   let sesion =
     localStorage.getItem(
-      "miaXV_sesion"
+      STORAGE_SESION
     );
 
 
@@ -719,7 +758,7 @@
 
 
     localStorage.setItem(
-      "miaXV_sesion",
+      STORAGE_SESION,
       sesion
     );
 
@@ -792,6 +831,34 @@
 
 
   /* ========================================================
+     ARRANQUE
+  ======================================================== */
+
+  actualizarContadores();
+
+  window.addEventListener(
+    "online",
+    procesarCola
+  );
+
+  setInterval(
+    function () {
+
+      if (
+        navigator.onLine &&
+        cola.length > 0
+      ) {
+
+        procesarCola();
+
+      }
+
+    },
+    10000
+  );
+
+
+  /* ========================================================
      ABRIR CÁMARA
   ======================================================== */
 
@@ -810,6 +877,15 @@
 
 
       await iniciarCamara();
+
+
+      if (
+        cola.length > 0
+      ) {
+
+        procesarCola();
+
+      }
 
     }
   );
@@ -854,35 +930,30 @@
       detenerCamara();
 
 
-      const restricciones = {
-
-        audio: false,
-
-        video: {
-
-          facingMode: {
-            ideal: facingMode
-          },
-
-          width: {
-            ideal: 1920
-          },
-
-          height: {
-            ideal: 1080
-          }
-
-        }
-
-      };
-
-
       stream =
         await navigator
           .mediaDevices
-          .getUserMedia(
-            restricciones
-          );
+          .getUserMedia({
+
+            audio: false,
+
+            video: {
+
+              facingMode: {
+                ideal: facingMode
+              },
+
+              width: {
+                ideal: 1920
+              },
+
+              height: {
+                ideal: 1080
+              }
+
+            }
+
+          });
 
 
       video.srcObject =
@@ -916,7 +987,7 @@
       ) {
 
         mensajeError.textContent =
-          "El navegador no tiene permiso para usar la cámara. Permití el acceso a la cámara y volvé a intentarlo.";
+          "El navegador no tiene permiso para usar la cámara. Permití el acceso y volvé a intentarlo.";
 
       } else {
 
@@ -960,11 +1031,6 @@
     "click",
     async function () {
 
-      if (procesando) {
-        return;
-      }
-
-
       facingMode =
         facingMode ===
         "environment"
@@ -988,12 +1054,7 @@
   );
 
 
-  async function tomarFoto() {
-
-    if (procesando) {
-      return;
-    }
-
+  function tomarFoto() {
 
     if (
       !video.videoWidth ||
@@ -1009,9 +1070,6 @@
     }
 
 
-    procesando = true;
-
-
     ejecutarFlash();
 
 
@@ -1021,48 +1079,80 @@
         capturarImagen();
 
 
+      fotosTomadas++;
+
+
+      localStorage.setItem(
+        STORAGE_CONTADOR,
+        String(fotosTomadas)
+      );
+
+
+      const uploadId =
+        generarUploadId();
+
+
+      const item = {
+
+        uploadId:
+          uploadId,
+
+        sesion:
+          sesion,
+
+        numeroFoto:
+          fotosTomadas,
+
+        imagen:
+          imagen,
+
+        intentos:
+          0,
+
+        creado:
+          Date.now()
+
+      };
+
+
+      cola.push(
+        item
+      );
+
+
+      guardarCola();
+
+
+      actualizarContadores();
+
+
       mostrarEstado(
-        "Guardando..."
+        navigator.onLine
+          ? "✓ Foto tomada"
+          : "✓ Guardada en el teléfono"
       );
 
 
-      const siguienteNumero =
-        fotosTomadas + 1;
+      /*
+        Intentamos subir inmediatamente,
+        pero el invitado puede seguir
+        sacando fotos.
+      */
 
-
-      await subirFoto(
-        imagen,
-        siguienteNumero
-      );
-
-
-      fotosTomadas =
-        siguienteNumero;
-
-
-      actualizarContador();
-
-
-      mostrarEstado(
-        "✓ Foto guardada"
-      );
+      procesarCola();
 
 
     } catch (error) {
 
       console.error(
-        "Error guardando foto:",
+        "Error capturando foto:",
         error
       );
 
 
       mostrarEstado(
-        "⚠ No se pudo guardar"
+        "⚠ No se pudo tomar"
       );
-
-    } finally {
-
-      procesando = false;
 
     }
 
@@ -1070,7 +1160,7 @@
 
 
   /* ========================================================
-     CAPTURAR Y COMPRIMIR
+     CAPTURA
   ======================================================== */
 
   function capturarImagen() {
@@ -1169,12 +1259,275 @@
 
 
   /* ========================================================
-     SUBIR FOTO A GOOGLE DRIVE
+     COLA
   ======================================================== */
 
-  async function subirFoto(
-    imagen,
-    numeroFoto
+  function cargarCola() {
+
+    try {
+
+      const guardado =
+        localStorage.getItem(
+          STORAGE_KEY
+        );
+
+
+      if (!guardado) {
+        return [];
+      }
+
+
+      const datos =
+        JSON.parse(
+          guardado
+        );
+
+
+      return Array.isArray(datos)
+        ? datos
+        : [];
+
+
+    } catch (error) {
+
+      console.error(
+        "No se pudo cargar la cola:",
+        error
+      );
+
+
+      return [];
+
+    }
+
+  }
+
+
+  function guardarCola() {
+
+    try {
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(
+          cola
+        )
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "No se pudo guardar la cola:",
+        error
+      );
+
+
+      /*
+        Si el navegador se queda sin
+        espacio, avisamos.
+      */
+
+      mostrarEstado(
+        "⚠ Memoria del navegador llena"
+      );
+
+    }
+
+  }
+
+
+  async function procesarCola() {
+
+    if (procesandoCola) {
+      return;
+    }
+
+
+    if (!navigator.onLine) {
+      return;
+    }
+
+
+    if (
+      cola.length === 0
+    ) {
+
+      actualizarContadores();
+
+      return;
+
+    }
+
+
+    procesandoCola =
+      true;
+
+
+    try {
+
+      let indice = 0;
+
+
+      while (
+        indice <
+        cola.length
+      ) {
+
+        const item =
+          cola[indice];
+
+
+        /*
+          Primero comprobamos si ya llegó.
+          Esto evita duplicados.
+        */
+
+        const yaConfirmada =
+          await consultarConfirmacion(
+            item.uploadId
+          );
+
+
+        if (yaConfirmada) {
+
+          cola.splice(
+            indice,
+            1
+          );
+
+
+          guardarCola();
+
+          actualizarContadores();
+
+          continue;
+
+        }
+
+
+        try {
+
+          item.intentos =
+            (
+              item.intentos ||
+              0
+            ) + 1;
+
+
+          guardarCola();
+
+
+          await enviarFoto(
+            item
+          );
+
+
+          /*
+            Esperamos un instante antes
+            de consultar confirmación.
+          */
+
+          await esperar(
+            900
+          );
+
+
+          let confirmada =
+            false;
+
+
+          for (
+            let intento = 0;
+            intento < 5;
+            intento++
+          ) {
+
+            confirmada =
+              await consultarConfirmacion(
+                item.uploadId
+              );
+
+
+            if (confirmada) {
+              break;
+            }
+
+
+            await esperar(
+              900
+            );
+
+          }
+
+
+          if (confirmada) {
+
+            cola.splice(
+              indice,
+              1
+            );
+
+
+            guardarCola();
+
+            actualizarContadores();
+
+
+            mostrarEstado(
+              "✓ Foto enviada"
+            );
+
+
+            continue;
+
+          }
+
+
+          /*
+            Si no se confirma,
+            queda pendiente.
+          */
+
+          indice++;
+
+
+        } catch (error) {
+
+          console.error(
+            "Error subiendo:",
+            error
+          );
+
+
+          indice++;
+
+        }
+
+      }
+
+
+    } finally {
+
+      procesandoCola =
+        false;
+
+
+      guardarCola();
+
+      actualizarContadores();
+
+    }
+
+  }
+
+
+  /* ========================================================
+     SUBIDA
+  ======================================================== */
+
+  async function enviarFoto(
+    item
   ) {
 
     const datos =
@@ -1183,37 +1536,44 @@
 
     datos.append(
       "imagen",
-      imagen
+      item.imagen
     );
 
 
     datos.append(
       "sesion",
-      sesion
+      item.sesion
     );
 
 
     datos.append(
       "numeroFoto",
-      String(numeroFoto)
+      String(
+        item.numeroFoto
+      )
+    );
+
+
+    datos.append(
+      "uploadId",
+      item.uploadId
     );
 
 
     /*
-      no-cors es necesario para enviar
-      desde GitHub Pages al Web App
-      de Google Apps Script.
-
-      La respuesta no puede leerse,
-      pero el POST llega al servidor.
+      no-cors permite enviar desde
+      GitHub Pages a Apps Script.
     */
 
     await fetch(
       URL_APPS_SCRIPT,
       {
-        method: "POST",
 
-        mode: "no-cors",
+        method:
+          "POST",
+
+        mode:
+          "no-cors",
 
         headers: {
           "Content-Type":
@@ -1222,6 +1582,7 @@
 
         body:
           datos.toString()
+
       }
     );
 
@@ -1229,10 +1590,159 @@
 
 
   /* ========================================================
-     CONTADOR
+     CONFIRMACIÓN REAL
+     JSONP
   ======================================================== */
 
-  function actualizarContador() {
+  function consultarConfirmacion(
+    uploadId
+  ) {
+
+    return new Promise(
+      function (resolve) {
+
+        const callback =
+          "__mia_cb_" +
+          Date.now() +
+          "_" +
+          Math.random()
+            .toString(36)
+            .substring(2, 7);
+
+
+        const script =
+          document.createElement(
+            "script"
+          );
+
+
+        let terminado =
+          false;
+
+
+        const limpiar =
+          function () {
+
+            if (terminado) {
+              return;
+            }
+
+
+            terminado =
+              true;
+
+
+            delete window[
+              callback
+            ];
+
+
+            if (
+              script.parentNode
+            ) {
+
+              script.parentNode
+                .removeChild(
+                  script
+                );
+
+            }
+
+          };
+
+
+        const timeout =
+          setTimeout(
+            function () {
+
+              limpiar();
+
+              resolve(
+                false
+              );
+
+            },
+            7000
+          );
+
+
+        window[
+          callback
+        ] =
+          function (
+            respuesta
+          ) {
+
+            clearTimeout(
+              timeout
+            );
+
+
+            const confirmado =
+              Boolean(
+                respuesta &&
+                respuesta.confirmed
+              );
+
+
+            limpiar();
+
+
+            resolve(
+              confirmado
+            );
+
+          };
+
+
+        script.onerror =
+          function () {
+
+            clearTimeout(
+              timeout
+            );
+
+
+            limpiar();
+
+
+            resolve(
+              false
+            );
+
+          };
+
+
+        script.src =
+          URL_APPS_SCRIPT +
+          "?action=status" +
+          "&uploadId=" +
+          encodeURIComponent(
+            uploadId
+          ) +
+          "&callback=" +
+          encodeURIComponent(
+            callback
+          ) +
+          "&t=" +
+          Date.now();
+
+
+        document.body.appendChild(
+          script
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ========================================================
+     CONTADORES
+  ======================================================== */
+
+  function actualizarContadores() {
 
     contador.textContent =
       String(
@@ -1246,6 +1756,33 @@
           ? " FOTO"
           : " FOTOS"
       );
+
+
+    pendientesElemento.textContent =
+      cola.length +
+      " PEND.";
+
+  }
+
+
+  /* ========================================================
+     IDs
+  ======================================================== */
+
+  function generarUploadId() {
+
+    return (
+      Date.now()
+        .toString(36)
+        .toUpperCase()
+      +
+      "-"
+      +
+      Math.random()
+        .toString(36)
+        .substring(2, 9)
+        .toUpperCase()
+    );
 
   }
 
@@ -1304,6 +1841,24 @@
         },
         1800
       );
+
+  }
+
+
+  function esperar(
+    milisegundos
+  ) {
+
+    return new Promise(
+      function (resolve) {
+
+        setTimeout(
+          resolve,
+          milisegundos
+        );
+
+      }
+    );
 
   }
 
